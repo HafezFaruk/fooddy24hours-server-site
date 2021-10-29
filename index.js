@@ -6,7 +6,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
@@ -19,7 +19,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         await client.connect();
-        const database = client.db('geniusMechanic');
+        const database = client.db('fooddy24h');
         const sreviceCollection = database.collection('services');
 
         // GET ALL DATA
@@ -41,15 +41,25 @@ async function run() {
 
         });
 
-        // GET API UPDATE
-        app.get('/services/:id',async (req, res)=> {
+       
+        app.put('/services/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id) };
-            const result = await sreviceCollection.insertOne(query);
-            console.log("load services",id);
-            res.send(result);
+            const updateService = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    name: updateService.name,
+                    price: updateService.price,
+                    description: updateService.description,
+                    img: updateService.img
+                }
+            }
+            const result = await sreviceCollection.updateOne(filter, updateDoc, options);
+            res.json(result)
         })
 
+ 
         // POST API
         app.post('/services', async (req, res) => {
             const service = req.body;
